@@ -1,1 +1,2159 @@
 
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Escape Extinction: A BIO 227 Conservation Puzzle Game</title>
+  <style>
+    :root {
+      --ink: #2a1a18;
+      --ink-soft: #5b423a;
+      --cream: #f8e8bf;
+      --paper: #f4daa0;
+      --paper-dark: #c98c46;
+      --wood: #733f2a;
+      --wood-dark: #3b1d16;
+      --wood-light: #a7643a;
+      --moss: #5b7a48;
+      --moss-dark: #33482e;
+      --teal: #3f8a84;
+      --teal-dark: #21545a;
+      --sky: #9ccfc9;
+      --gold: #f3bc57;
+      --red: #b94f42;
+      --blue: #456a8f;
+      --shadow: rgba(31, 15, 11, .45);
+      --glow: rgba(255, 205, 107, .55);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #1b171a;
+      color: var(--ink);
+      font-family: "Trebuchet MS", "Gill Sans", system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    button, input { font: inherit; }
+
+    .screen {
+      min-height: 100vh;
+      display: none;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .screen.active { display: block; }
+
+    .grain {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      opacity: .18;
+      mix-blend-mode: multiply;
+      background-image:
+        radial-gradient(circle at 14% 23%, rgba(255,255,255,.45) 0 1px, transparent 1.3px),
+        radial-gradient(circle at 64% 42%, rgba(0,0,0,.3) 0 1px, transparent 1.25px),
+        radial-gradient(circle at 35% 76%, rgba(255,255,255,.35) 0 1px, transparent 1.15px);
+      background-size: 36px 31px, 47px 43px, 29px 35px;
+    }
+
+    /* TITLE SCREEN */
+    .title-screen {
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(255, 208, 122, .18), transparent 28%),
+        linear-gradient(180deg, #6c3928 0%, #4c281d 22%, #2e1915 100%);
+    }
+
+    .title-screen:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(115deg, transparent 0 10%, rgba(255,255,255,.055) 10% 12%, transparent 12% 41%, rgba(0,0,0,.16) 41% 44%, transparent 44%),
+        radial-gradient(ellipse at bottom, rgba(245, 154, 76, .25), transparent 48%);
+      opacity: .85;
+    }
+
+    .attic-beam,
+    .attic-beam:before,
+    .attic-beam:after {
+      position: absolute;
+      height: 46px;
+      background: linear-gradient(180deg, #9b5b38, #61321f 60%, #351910);
+      border: 2px solid rgba(46,23,17,.5);
+      box-shadow: 0 14px 0 rgba(40,16,10,.15), inset 0 4px rgba(255,255,255,.09);
+      transform-origin: center;
+      z-index: 0;
+    }
+
+    .attic-beam.main {
+      left: -10vw;
+      right: -10vw;
+      top: 0;
+      transform: rotate(-1deg);
+    }
+
+    .attic-beam.diagonal-a {
+      width: 64vw;
+      top: 6vh;
+      right: -16vw;
+      transform: rotate(51deg);
+      border-radius: 0 0 18px 18px;
+    }
+
+    .attic-beam.diagonal-b {
+      width: 54vw;
+      bottom: 8vh;
+      left: -20vw;
+      transform: rotate(-39deg);
+      opacity: .72;
+    }
+
+    .lamp {
+      position: absolute;
+      left: 38px;
+      top: 4px;
+      width: 108px;
+      height: 130px;
+      z-index: 4;
+      filter: drop-shadow(0 9px 8px rgba(0,0,0,.35));
+    }
+
+    .lamp .cord {
+      position: absolute;
+      left: 51px;
+      top: 0;
+      width: 5px;
+      height: 52px;
+      background: #2b2530;
+      border-radius: 4px;
+    }
+
+    .lamp .shade {
+      position: absolute;
+      left: 11px;
+      top: 39px;
+      width: 86px;
+      height: 47px;
+      background: linear-gradient(180deg, #526b78, #2f3c48);
+      border: 4px solid #24333e;
+      border-bottom: none;
+      border-radius: 60px 60px 12px 12px;
+    }
+
+    .lamp .shade:before {
+      content: "";
+      position: absolute;
+      left: 32px;
+      top: -17px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #526b78;
+      border: 4px solid #24333e;
+    }
+
+    .lamp .bulb {
+      position: absolute;
+      left: 39px;
+      top: 71px;
+      width: 31px;
+      height: 31px;
+      border-radius: 50% 50% 46% 46%;
+      background: radial-gradient(circle at 52% 38%, #fff3b4 0 19%, #ffc85a 43%, #d98e37 76%);
+      box-shadow: 0 0 26px 15px var(--glow);
+    }
+
+    .title-clouds {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 40%;
+      z-index: 1;
+      background:
+        radial-gradient(ellipse at 15% 90%, rgba(53, 107, 84, .55) 0 11%, transparent 12%),
+        radial-gradient(ellipse at 78% 86%, rgba(66, 117, 91, .42) 0 12%, transparent 13%),
+        linear-gradient(180deg, transparent, rgba(20, 16, 18, .6));
+    }
+
+    .title-wrap {
+      position: relative;
+      z-index: 5;
+      width: min(980px, 96vw);
+      margin: 0 auto;
+      padding-top: clamp(44px, 8vh, 86px);
+      text-align: center;
+    }
+
+    .logo {
+      margin: 0 auto;
+      line-height: .83;
+      color: #e8e1d4;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 900;
+      text-shadow:
+        0 4px 0 #2a1714,
+        0 8px 0 rgba(0,0,0,.28),
+        0 18px 34px rgba(0,0,0,.65);
+      transform: rotate(-2.5deg);
+      user-select: none;
+    }
+
+    .logo .line {
+      display: block;
+      white-space: nowrap;
+    }
+
+    .logo .letter {
+      display: inline-block;
+      font-size: clamp(2.4rem, 8vw, 6.7rem);
+      -webkit-text-stroke: 1px rgba(58, 30, 25, .65);
+      transform: translateY(var(--rise, 0)) rotate(var(--rot, 0deg));
+    }
+
+    .logo .line:last-child .letter {
+      font-size: clamp(2.15rem, 7.3vw, 5.95rem);
+    }
+
+    .subtitle-banner {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: min(720px, 90vw);
+      min-height: 76px;
+      margin: -6px auto 10px;
+      padding: 12px 58px 16px;
+      color: #693a26;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.2rem, 4vw, 3.05rem);
+      font-weight: 900;
+      letter-spacing: .035em;
+      text-transform: uppercase;
+      text-shadow: 0 2px rgba(255,255,255,.4);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.12), transparent 18% 82%, rgba(255,255,255,.13)),
+        linear-gradient(180deg, #f7e6a7, #d5a35b 62%, #b97839);
+      border: 3px solid rgba(83, 45, 26, .55);
+      border-radius: 14px 16px 20px 20px / 20px 20px 14px 14px;
+      box-shadow: 0 10px 0 rgba(54, 28, 18, .28), inset 0 4px rgba(255,255,255,.4);
+      transform: rotate(1.5deg);
+    }
+
+    .subtitle-banner:before,
+    .subtitle-banner:after {
+      content: "";
+      position: absolute;
+      top: 18px;
+      width: 72px;
+      height: 55px;
+      background: linear-gradient(180deg, #e4be70, #ac6635);
+      border: 3px solid rgba(83, 45, 26, .48);
+      z-index: -1;
+      box-shadow: 0 9px 0 rgba(54, 28, 18, .18);
+    }
+
+    .subtitle-banner:before {
+      left: -51px;
+      transform: rotate(-9deg) skewY(-4deg);
+      border-radius: 26px 9px 12px 28px;
+    }
+
+    .subtitle-banner:after {
+      right: -51px;
+      transform: rotate(8deg) skewY(4deg);
+      border-radius: 9px 26px 28px 12px;
+    }
+
+    .tagline {
+      position: relative;
+      z-index: 6;
+      margin: 0 auto;
+      max-width: 720px;
+      color: #ffe2ad;
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      text-shadow: 0 3px 8px rgba(0,0,0,.85);
+    }
+
+    .title-art {
+      position: relative;
+      z-index: 3;
+      width: min(980px, 94vw);
+      height: clamp(300px, 48vh, 430px);
+      margin: -10px auto 0;
+    }
+
+    .back-window {
+      position: absolute;
+      left: 50%;
+      top: 28px;
+      width: 380px;
+      height: 230px;
+      transform: translateX(-50%) rotate(-3deg);
+      border-radius: 48% 52% 46% 48%;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,255,255,.55), transparent 8%),
+        linear-gradient(160deg, #74b7a9, #497d6c 48%, #30594f);
+      border: 8px solid rgba(57, 39, 30, .5);
+      box-shadow: inset 0 -22px rgba(23,60,48,.32), 0 15px 30px rgba(0,0,0,.32);
+      overflow: hidden;
+    }
+
+    .back-window:before {
+      content: "";
+      position: absolute;
+      inset: 76px -40px auto;
+      height: 120px;
+      background:
+        radial-gradient(ellipse at 25% 78%, #274b32 0 21%, transparent 22%),
+        radial-gradient(ellipse at 56% 72%, #315b3c 0 28%, transparent 29%),
+        radial-gradient(ellipse at 87% 79%, #23442e 0 25%, transparent 26%);
+    }
+
+    .back-window:after {
+      content: "";
+      position: absolute;
+      left: 71px;
+      top: 39px;
+      width: 196px;
+      height: 4px;
+      background: rgba(254,230,158,.35);
+      transform: rotate(-25deg);
+      box-shadow: 62px 56px 0 rgba(254,230,158,.2), 20px 94px 0 rgba(254,230,158,.18);
+    }
+
+    .couch {
+      position: absolute;
+      left: 50%;
+      bottom: 14px;
+      width: 500px;
+      height: 164px;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #5d9a8e, #3d746e 62%, #2d5557);
+      border: 7px solid rgba(41, 44, 42, .44);
+      border-radius: 52px 54px 44px 44px;
+      box-shadow: 0 24px 0 rgba(38,19,13,.28), inset 0 8px rgba(255,255,255,.11);
+    }
+
+    .couch:before,
+    .couch:after {
+      content: "";
+      position: absolute;
+      bottom: 22px;
+      width: 92px;
+      height: 108px;
+      border-radius: 38px;
+      background: linear-gradient(180deg, #70aca0, #3b716a);
+      border: 6px solid rgba(43,47,42,.28);
+    }
+
+    .couch:before { left: -40px; transform: rotate(-10deg); }
+    .couch:after { right: -40px; transform: rotate(10deg); }
+
+    .cushion {
+      position: absolute;
+      bottom: 60px;
+      width: 137px;
+      height: 102px;
+      border-radius: 18px 28px 22px 26px;
+      background: linear-gradient(135deg, #83c3c8, #dfd1bd 59%, #c4a899);
+      border: 5px solid rgba(40,31,30,.22);
+      box-shadow: inset 6px 8px rgba(255,255,255,.18);
+    }
+
+    .cushion.left { left: 250px; transform: rotate(-12deg); }
+    .cushion.right { right: 240px; transform: rotate(12deg); opacity: .75; }
+
+    .botany-crate {
+      position: absolute;
+      left: calc(50% + 54px);
+      bottom: 105px;
+      width: 100px;
+      height: 142px;
+      transform: rotate(5deg);
+      background: linear-gradient(180deg, #8b6548, #5f3929 70%, #3b241e);
+      border: 6px solid rgba(39,25,20,.45);
+      border-radius: 25px 25px 20px 20px;
+      box-shadow: 0 16px 18px rgba(0,0,0,.3), inset 0 7px rgba(255,255,255,.08);
+    }
+
+    .botany-crate:before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 19px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #1c1716;
+      box-shadow: 43px 4px 0 #1c1716;
+    }
+
+    .botany-crate:after {
+      content: "";
+      position: absolute;
+      left: 28px;
+      top: 73px;
+      width: 40px;
+      height: 5px;
+      background: rgba(31,18,16,.55);
+      border-radius: 8px;
+      box-shadow: 2px 24px 0 rgba(31,18,16,.38);
+    }
+
+    .seed-vault {
+      position: absolute;
+      left: calc(50% - 250px);
+      bottom: 58px;
+      width: 130px;
+      height: 108px;
+      transform: rotate(-5deg);
+      background: linear-gradient(180deg, #b9c4c9, #72858d 62%, #4d626a);
+      border: 6px solid rgba(36,35,39,.38);
+      border-radius: 12px 18px 14px 16px;
+      box-shadow: 0 15px 0 rgba(43,22,14,.2);
+    }
+
+    .seed-vault:before {
+      content: "";
+      position: absolute;
+      left: 32px;
+      top: 21px;
+      width: 66px;
+      height: 44px;
+      background: linear-gradient(180deg, rgba(117,223,211,.55), rgba(26,82,85,.5));
+      border: 4px solid rgba(19,43,48,.4);
+      border-radius: 10px;
+      box-shadow: inset 0 4px rgba(255,255,255,.3);
+    }
+
+    .seed-vault:after {
+      content: "SEED\A BANK";
+      white-space: pre;
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      color: rgba(255,255,255,.75);
+      font-size: .62rem;
+      font-weight: 900;
+      line-height: .9;
+      letter-spacing: .08em;
+      text-align: center;
+      transform: rotate(-2deg);
+    }
+
+    .ladder {
+      position: absolute;
+      left: 22px;
+      bottom: 58px;
+      width: 104px;
+      height: 315px;
+      transform: rotate(-12deg);
+      border-left: 12px solid #74402b;
+      border-right: 12px solid #74402b;
+      border-radius: 12px;
+      opacity: .95;
+      filter: drop-shadow(0 12px 10px rgba(0,0,0,.25));
+    }
+
+    .ladder span {
+      position: absolute;
+      left: -5px;
+      right: -5px;
+      height: 11px;
+      background: #a76339;
+      border-radius: 7px;
+      box-shadow: inset 0 3px rgba(255,255,255,.09);
+    }
+
+    .ladder span:nth-child(1) { top: 29px; }
+    .ladder span:nth-child(2) { top: 82px; }
+    .ladder span:nth-child(3) { top: 135px; }
+    .ladder span:nth-child(4) { top: 188px; }
+    .ladder span:nth-child(5) { top: 241px; }
+
+    .shelf {
+      position: absolute;
+      right: 24px;
+      bottom: 78px;
+      width: 122px;
+      height: 260px;
+      transform: rotate(5deg);
+      border-radius: 14px 14px 24px 24px;
+      background: linear-gradient(180deg, #7e4430, #4c241b);
+      border: 6px solid rgba(39,19,14,.44);
+      box-shadow: 0 20px 18px rgba(0,0,0,.28), inset 0 5px rgba(255,255,255,.07);
+    }
+
+    .shelf:before {
+      content: "";
+      position: absolute;
+      left: 15px;
+      right: 15px;
+      top: 52px;
+      height: 9px;
+      background: #b56b3a;
+      box-shadow: 0 64px 0 #b56b3a, 0 128px 0 #b56b3a;
+      border-radius: 7px;
+    }
+
+    .book,
+    .flask,
+    .plant,
+    .lizard {
+      position: absolute;
+      z-index: 2;
+    }
+
+    .book {
+      width: 16px;
+      height: 40px;
+      background: var(--blue);
+      border-radius: 3px;
+      box-shadow: 18px 3px 0 #c45e57, 35px -3px 0 #e2ad4a;
+      right: 72px;
+      bottom: 266px;
+      transform: rotate(6deg);
+    }
+
+    .flask {
+      right: 64px;
+      bottom: 202px;
+      width: 29px;
+      height: 43px;
+      border-radius: 7px 7px 17px 17px;
+      background: linear-gradient(180deg, transparent 0 38%, rgba(96,202,192,.8) 39%);
+      border: 4px solid rgba(220,232,222,.8);
+    }
+
+    .plant {
+      right: 94px;
+      bottom: 118px;
+      width: 48px;
+      height: 56px;
+      background: #5d3325;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .plant:before,
+    .plant:after {
+      content: "";
+      position: absolute;
+      bottom: 39px;
+      border-radius: 100% 0 100% 0;
+      background: #4f9a5c;
+      transform-origin: bottom right;
+    }
+
+    .plant:before { left: 6px; width: 33px; height: 20px; transform: rotate(-42deg); }
+    .plant:after { right: 3px; width: 38px; height: 22px; transform: rotate(25deg) scaleX(-1); }
+
+    .lizard {
+      right: 151px;
+      bottom: 48px;
+      width: 78px;
+      height: 32px;
+      transform: rotate(-9deg);
+      background: linear-gradient(180deg, #6fb36b, #397c4a);
+      border-radius: 60% 34% 42% 53%;
+      filter: drop-shadow(0 8px 5px rgba(0,0,0,.28));
+    }
+
+    .lizard:before {
+      content: "";
+      position: absolute;
+      right: -35px;
+      top: 8px;
+      width: 44px;
+      height: 8px;
+      border-radius: 100%;
+      border-top: 6px solid #397c4a;
+      transform: rotate(16deg);
+    }
+
+    .lizard:after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 8px;
+      width: 7px;
+      height: 7px;
+      background: #1f1814;
+      border-radius: 50%;
+    }
+
+    .title-actions {
+      position: absolute;
+      z-index: 12;
+      left: 50%;
+      bottom: clamp(16px, 3vh, 28px);
+      transform: translateX(-50%);
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: min(760px, 94vw);
+    }
+
+    .btn {
+      position: relative;
+      border: 0;
+      color: #fff7dc;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.18), transparent 45%),
+        linear-gradient(180deg, #b9633e, #7a3426);
+      border-radius: 999px;
+      padding: 13px 22px;
+      min-width: 132px;
+      cursor: pointer;
+      font-weight: 900;
+      letter-spacing: .03em;
+      box-shadow: 0 7px 0 #3e1e18, 0 14px 20px rgba(0,0,0,.28), inset 0 2px rgba(255,255,255,.23);
+      transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+      outline: 3px solid rgba(255,220,130,.5);
+      outline-offset: 3px;
+    }
+
+    .btn:active {
+      transform: translateY(5px);
+      box-shadow: 0 2px 0 #3e1e18, 0 8px 14px rgba(0,0,0,.25), inset 0 2px rgba(255,255,255,.23);
+    }
+
+    .btn.secondary {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.15), transparent 45%),
+        linear-gradient(180deg, #4b8b82, #28535a);
+    }
+
+    .btn.ghost {
+      background: rgba(45, 25, 21, .55);
+      color: #ffe8bb;
+      border: 2px solid rgba(255, 219, 151, .35);
+      box-shadow: 0 7px 0 rgba(26,13,11,.9), 0 12px 18px rgba(0,0,0,.24);
+    }
+
+    /* GAME LAYOUT */
+    .game-screen {
+      background:
+        radial-gradient(circle at 24% 18%, rgba(248, 203, 106, .18), transparent 24%),
+        linear-gradient(180deg, #253438, #181b22 60%, #111318);
+      color: var(--cream);
+      padding: 16px;
+    }
+
+    .game-shell {
+      position: relative;
+      z-index: 2;
+      min-height: calc(100vh - 32px);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 16px;
+      width: min(1220px, 100%);
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 13px 16px;
+      border-radius: 24px;
+      background: rgba(21, 20, 22, .72);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 14px 40px rgba(0,0,0,.3), inset 0 1px rgba(255,255,255,.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .tiny-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffe6b0;
+      font-family: Georgia, serif;
+      font-weight: 900;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .tiny-emblem {
+      width: 43px;
+      height: 43px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #d19a4c, #5f9d88 58%, #2a4a55);
+      color: #fff7dd;
+      box-shadow: inset 0 2px rgba(255,255,255,.22), 0 7px 12px rgba(0,0,0,.22);
+      transform: rotate(-5deg);
+    }
+
+    .progress {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .stamp {
+      width: min(82px, 14vw);
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.14);
+      overflow: hidden;
+    }
+
+    .stamp.done { background: linear-gradient(90deg, #e9b354, #8ec27d); }
+    .stamp.current { background: linear-gradient(90deg, #e9b354 45%, rgba(255,255,255,.15) 45%); }
+
+    .top-actions { display: flex; gap: 8px; }
+
+    .small-btn {
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      color: #ffeac1;
+      border-radius: 999px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .small-btn:hover,
+    .small-btn:focus-visible {
+      outline: 2px solid rgba(255,230,169,.45);
+      outline-offset: 2px;
+      background: rgba(255,255,255,.13);
+    }
+
+    .play-area {
+      display: grid;
+      grid-template-columns: minmax(360px, 46%) minmax(430px, 1fr);
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .panel {
+      position: relative;
+      border-radius: 30px;
+      background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.04));
+      border: 1px solid rgba(255,255,255,.13);
+      box-shadow: 0 18px 45px rgba(0,0,0,.35), inset 0 1px rgba(255,255,255,.08);
+      overflow: hidden;
+    }
+
+    .scene-panel {
+      min-height: 600px;
+      padding: 18px;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      gap: 14px;
+    }
+
+    .diorama {
+      position: relative;
+      min-height: 430px;
+      border-radius: 26px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.12), transparent 48%),
+        linear-gradient(180deg, #7e6048, #4b2a22 42%, #231719);
+      border: 3px solid rgba(255,255,255,.11);
+      box-shadow: inset 0 -25px rgba(0,0,0,.22), 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    .diorama .backlight {
+      position: absolute;
+      left: 50%;
+      top: 15%;
+      width: 52%;
+      height: 47%;
+      transform: translateX(-50%) rotate(-2deg);
+      border-radius: 45% 51% 43% 55%;
+      background: radial-gradient(circle at 38% 28%, rgba(255,255,255,.5), transparent 11%), linear-gradient(160deg, #9dd3cf, #477c73 54%, #2e514e);
+      border: 7px solid rgba(53,32,25,.55);
+      box-shadow: inset 0 -16px rgba(24,63,53,.25), 0 20px 28px rgba(0,0,0,.23);
+    }
+
+    .diorama .floor {
+      position: absolute;
+      left: -5%;
+      right: -5%;
+      bottom: -12%;
+      height: 36%;
+      background:
+        radial-gradient(ellipse at 18% 18%, rgba(255,255,255,.1), transparent 18%),
+        repeating-linear-gradient(110deg, rgba(255,255,255,.05) 0 8px, transparent 8px 30px),
+        linear-gradient(180deg, #9b5c38, #4b2a20 72%);
+      transform: rotate(-1deg);
+      border-top: 6px solid rgba(56,28,19,.5);
+    }
+
+    .scene-object { position: absolute; }
+
+    .scene-table {
+      left: 50%;
+      bottom: 18%;
+      width: 54%;
+      height: 17%;
+      transform: translateX(-50%);
+      border-radius: 22px;
+      background: linear-gradient(180deg, #b17148, #6c3827 72%);
+      border: 5px solid rgba(46,26,22,.38);
+      box-shadow: 0 16px 0 rgba(0,0,0,.15);
+    }
+
+    .scene-table:before,
+    .scene-table:after {
+      content: "";
+      position: absolute;
+      bottom: -58%;
+      width: 12%;
+      height: 66%;
+      background: linear-gradient(180deg, #6c3827, #402019);
+      border-radius: 12px;
+    }
+
+    .scene-table:before { left: 15%; }
+    .scene-table:after { right: 15%; }
+
+    .duskwalker {
+      left: 50%;
+      bottom: 28%;
+      width: 94px;
+      height: 138px;
+      transform: translateX(-50%) rotate(2deg);
+    }
+
+    .duskwalker:before {
+      content: "";
+      position: absolute;
+      left: 24px;
+      top: 35px;
+      width: 49px;
+      height: 68px;
+      background: linear-gradient(180deg, #80634a, #4c392f);
+      border-radius: 44% 48% 50% 44%;
+      border: 4px solid rgba(35,25,21,.45);
+      box-shadow: inset 8px 8px rgba(255,255,255,.05);
+    }
+
+    .duskwalker:after {
+      content: "";
+      position: absolute;
+      left: 30px;
+      top: 4px;
+      width: 42px;
+      height: 44px;
+      background: linear-gradient(180deg, #9f744f, #6a4c3c);
+      border-radius: 50% 50% 45% 45%;
+      border: 4px solid rgba(35,25,21,.45);
+      box-shadow: 9px 16px 0 -8px #171211, -9px 16px 0 -8px #171211;
+    }
+
+    .duskwalker .beak {
+      position: absolute;
+      left: 71px;
+      top: 25px;
+      width: 31px;
+      height: 12px;
+      background: #d2a04b;
+      clip-path: polygon(0 0, 100% 50%, 0 100%);
+      filter: drop-shadow(0 2px 0 rgba(0,0,0,.25));
+    }
+
+    .duskwalker .leg {
+      position: absolute;
+      bottom: 0;
+      width: 6px;
+      height: 42px;
+      background: #b3784a;
+      border-radius: 6px;
+      box-shadow: 0 0 0 2px rgba(39,20,16,.18);
+    }
+
+    .duskwalker .leg.one { left: 42px; transform: rotate(8deg); }
+    .duskwalker .leg.two { left: 58px; transform: rotate(-4deg); }
+
+    .floating-notes {
+      left: 11%;
+      top: 15%;
+      width: 116px;
+      height: 90px;
+      transform: rotate(-11deg);
+    }
+
+    .floating-notes:before,
+    .floating-notes:after {
+      content: "";
+      position: absolute;
+      background: #f0d58c;
+      border: 3px solid rgba(57,35,25,.28);
+      box-shadow: 0 7px 0 rgba(0,0,0,.11);
+    }
+
+    .floating-notes:before {
+      width: 82px;
+      height: 56px;
+      left: 0;
+      top: 10px;
+      border-radius: 7px;
+    }
+
+    .floating-notes:after {
+      width: 70px;
+      height: 46px;
+      right: 0;
+      bottom: 0;
+      border-radius: 7px;
+      transform: rotate(17deg);
+    }
+
+    .scene-leaves {
+      right: 10%;
+      bottom: 23%;
+      width: 90px;
+      height: 100px;
+    }
+
+    .scene-leaves:before,
+    .scene-leaves:after {
+      content: "";
+      position: absolute;
+      border-radius: 100% 0 100% 0;
+      background: linear-gradient(180deg, #74b968, #376f45);
+      transform-origin: bottom right;
+    }
+
+    .scene-leaves:before { width: 72px; height: 38px; left: 0; top: 22px; transform: rotate(-35deg); }
+    .scene-leaves:after { width: 82px; height: 42px; right: -8px; top: 41px; transform: rotate(25deg) scaleX(-1); }
+
+    .diorama.reserve {
+      background: linear-gradient(180deg, #6f8e87, #304c4f 51%, #202227);
+    }
+
+    .diorama.reserve .map-piece {
+      position: absolute;
+      border-radius: 44% 50% 49% 55%;
+      background: linear-gradient(180deg, #8ac06f, #4d8749);
+      border: 4px solid rgba(28,60,38,.42);
+      box-shadow: inset 0 6px rgba(255,255,255,.12), 0 10px 14px rgba(0,0,0,.18);
+    }
+
+    .diorama.reserve .map-piece.a { left: 22%; top: 24%; width: 19%; height: 34%; }
+    .diorama.reserve .map-piece.b { left: 48%; top: 19%; width: 25%; height: 39%; border-radius: 50%; }
+    .diorama.reserve .map-piece.c { left: 60%; top: 61%; width: 13%; height: 17%; }
+    .diorama.reserve .corridor-line {
+      position: absolute;
+      left: 39%;
+      top: 40%;
+      width: 26%;
+      height: 10px;
+      background: #8ac06f;
+      transform: rotate(-9deg);
+      border-radius: 999px;
+      box-shadow: 0 3px 0 rgba(0,0,0,.15);
+    }
+
+    .diorama.city {
+      background: linear-gradient(180deg, #77939c, #3e545d 46%, #2c2329);
+    }
+
+    .city-block {
+      position: absolute;
+      bottom: 22%;
+      width: 14%;
+      background: linear-gradient(180deg, #9d7d67, #5a3b34);
+      border: 4px solid rgba(32,22,20,.35);
+      border-radius: 8px 8px 0 0;
+      box-shadow: inset 0 4px rgba(255,255,255,.08);
+    }
+
+    .city-block:before {
+      content: "";
+      position: absolute;
+      left: 16%; right: 16%; top: 14%; bottom: 14%;
+      background: repeating-linear-gradient(180deg, rgba(255,220,130,.65) 0 11px, transparent 11px 24px);
+      opacity: .62;
+    }
+
+    .city-block.one { left: 14%; height: 42%; }
+    .city-block.two { left: 31%; height: 57%; }
+    .city-block.three { right: 15%; height: 49%; }
+
+    .roof-garden {
+      position: absolute;
+      left: 28%;
+      bottom: 79%;
+      width: 22%;
+      height: 8%;
+      border-radius: 9px;
+      background: repeating-linear-gradient(90deg, #74b968 0 12px, #e3ba58 12px 17px, #5e9f5a 17px 30px);
+      border: 3px solid rgba(30,58,40,.35);
+    }
+
+    .diorama.restore {
+      background: linear-gradient(180deg, #8fb6b5, #61734e 45%, #3a3228);
+    }
+
+    .stream {
+      position: absolute;
+      left: 8%;
+      right: 4%;
+      bottom: 21%;
+      height: 25%;
+      border-radius: 50% 34% 55% 40%;
+      background: linear-gradient(160deg, rgba(132,202,207,.9), rgba(42,101,112,.82));
+      transform: rotate(-7deg);
+      border: 4px solid rgba(36,69,63,.35);
+      box-shadow: inset 0 9px rgba(255,255,255,.16);
+    }
+
+    .sprouts {
+      position: absolute;
+      left: 10%; right: 10%; bottom: 20%; height: 28%;
+      background:
+        radial-gradient(ellipse at 18% 62%, #75b85b 0 2.5%, transparent 3%),
+        radial-gradient(ellipse at 37% 45%, #75b85b 0 2.2%, transparent 2.7%),
+        radial-gradient(ellipse at 62% 69%, #75b85b 0 2.8%, transparent 3.2%),
+        radial-gradient(ellipse at 78% 37%, #75b85b 0 2.4%, transparent 2.9%);
+    }
+
+    .diorama.future {
+      background: linear-gradient(180deg, #716477, #314e54 48%, #1d1b22);
+    }
+
+    .council-table {
+      position: absolute;
+      left: 50%;
+      bottom: 20%;
+      width: 58%;
+      height: 25%;
+      transform: translateX(-50%);
+      border-radius: 50% 50% 28px 28px;
+      background: linear-gradient(180deg, #d09b53, #74412c);
+      border: 6px solid rgba(41,25,20,.43);
+      box-shadow: 0 16px 0 rgba(0,0,0,.18);
+    }
+
+    .council-table:before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 33%;
+      width: 78px;
+      height: 78px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,247,191,.86) 0 23%, rgba(98,175,149,.8) 25% 55%, rgba(38,78,87,.7) 56%);
+      box-shadow: 0 0 40px rgba(248,205,100,.45);
+    }
+
+    .stat-card {
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.1);
+    }
+
+    .stat-card h3 {
+      margin: 0 0 12px;
+      color: #ffe5ad;
+      font-family: Georgia, serif;
+      font-size: 1.05rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .stats-grid {
+      display: grid;
+      gap: 9px;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 98px 1fr 36px;
+      align-items: center;
+      gap: 8px;
+      color: #f6dfb6;
+      font-size: .93rem;
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.11);
+      border: 1px solid rgba(255,255,255,.1);
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      width: var(--value, 0%);
+      border-radius: inherit;
+      background: linear-gradient(90deg, #d88457, #e9c35d 45%, #74b968);
+      transition: width .55s ease;
+    }
+
+    .puzzle-panel {
+      min-height: 600px;
+      padding: 26px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.045)),
+        radial-gradient(circle at 82% 4%, rgba(237, 185, 82, .15), transparent 23%);
+    }
+
+    .room-kicker {
+      margin: 0 0 8px;
+      color: #e8bd6f;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      font-weight: 900;
+      font-size: .82rem;
+    }
+
+    .room-title {
+      margin: 0 0 8px;
+      color: #fff0cc;
+      font-family: Georgia, serif;
+      font-size: clamp(2rem, 4vw, 3.1rem);
+      line-height: .94;
+      letter-spacing: -.02em;
+      text-shadow: 0 4px 12px rgba(0,0,0,.28);
+    }
+
+    .room-copy {
+      max-width: 780px;
+      color: #f7e1bc;
+      font-size: 1.02rem;
+      line-height: 1.5;
+      margin: 0 0 18px;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .choice {
+      min-height: 92px;
+      text-align: left;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 21px;
+      padding: 15px 15px 14px;
+      cursor: pointer;
+      background: rgba(20, 19, 21, .46);
+      color: #fee8bb;
+      box-shadow: inset 0 1px rgba(255,255,255,.07), 0 8px 18px rgba(0,0,0,.16);
+      transition: transform .13s ease, background .13s ease, border-color .13s ease;
+    }
+
+    .choice:hover,
+    .choice:focus-visible {
+      transform: translateY(-2px);
+      outline: none;
+      border-color: rgba(244, 198, 99, .45);
+      background: rgba(39, 35, 33, .66);
+    }
+
+    .choice.selected {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.11), transparent 48%),
+        rgba(76, 117, 91, .62);
+      border-color: rgba(181, 226, 139, .62);
+      box-shadow: 0 0 0 3px rgba(181,226,139,.12), inset 0 1px rgba(255,255,255,.09), 0 10px 20px rgba(0,0,0,.2);
+    }
+
+    .choice .choice-title {
+      display: block;
+      font-weight: 900;
+      font-size: 1rem;
+      color: #fff4d3;
+      margin-bottom: 6px;
+    }
+
+    .choice .choice-sub {
+      display: block;
+      color: rgba(255,238,202,.78);
+      font-size: .9rem;
+      line-height: 1.32;
+    }
+
+    .sequence-list {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .sequence-choice {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      align-items: center;
+      gap: 12px;
+      min-height: 60px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(20,19,21,.46);
+      color: #fee8bb;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .sequence-choice:hover,
+    .sequence-choice:focus-visible {
+      outline: 2px solid rgba(244, 198, 99, .42);
+      outline-offset: 2px;
+    }
+
+    .sequence-choice.chosen {
+      background: rgba(82, 126, 91, .64);
+      border-color: rgba(181, 226, 139, .55);
+    }
+
+    .seq-num {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: rgba(255,255,255,.12);
+      color: #ffe5ad;
+      font-weight: 900;
+    }
+
+    .budget-meter {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin: 18px 0 10px;
+      color: #ffe5ad;
+      font-weight: 900;
+    }
+
+    .budget-track {
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.12);
+      overflow: hidden;
+    }
+
+    .budget-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #74b968, #f1c962, #d36a56);
+      transition: width .25s ease;
+    }
+
+    .council-scores {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .score-pill {
+      border-radius: 18px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.2);
+      border: 1px solid rgba(255,255,255,.1);
+      color: #f9e4bc;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .feedback {
+      min-height: 62px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.1);
+      color: #ffe6b6;
+      line-height: 1.45;
+    }
+
+    .feedback.good {
+      background: rgba(67, 112, 74, .34);
+      border-color: rgba(159, 221, 132, .34);
+    }
+
+    .feedback.bad {
+      background: rgba(146, 66, 55, .35);
+      border-color: rgba(245, 147, 121, .34);
+    }
+
+    .puzzle-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      align-items: center;
+    }
+
+    .note-line {
+      margin-left: auto;
+      color: rgba(255,235,196,.7);
+      font-size: .9rem;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .topic-badge {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: #ffe3a6;
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    /* MODALS */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(9, 8, 10, .72);
+      backdrop-filter: blur(6px);
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal {
+      width: min(860px, 96vw);
+      max-height: min(820px, 90vh);
+      overflow: auto;
+      border-radius: 30px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.12), transparent 22%),
+        #2b2424;
+      color: #ffe9c0;
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+      padding: 26px;
+    }
+
+    .modal h2 {
+      margin: 0 0 10px;
+      color: #fff0cc;
+      font-family: Georgia, serif;
+      font-size: 2.2rem;
+    }
+
+    .modal p,
+    .modal li {
+      color: #f5dfb9;
+      line-height: 1.55;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .journal-card {
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .journal-card h3 {
+      margin: 0 0 8px;
+      color: #ffe3a6;
+    }
+
+    .close-row {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .win-screen {
+      min-height: 100vh;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background:
+        radial-gradient(circle at 50% 26%, rgba(255, 222, 139, .23), transparent 26%),
+        linear-gradient(180deg, #243a3c, #15161c 70%);
+    }
+
+    .win-screen.active { display: grid; }
+
+    .win-card {
+      width: min(980px, 96vw);
+      border-radius: 34px;
+      padding: clamp(24px, 5vw, 46px);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.12), transparent 22%),
+        rgba(32, 29, 31, .9);
+      border: 1px solid rgba(255,255,255,.15);
+      color: #ffe9c0;
+      box-shadow: 0 30px 90px rgba(0,0,0,.55);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .win-card:before {
+      content: "";
+      position: absolute;
+      inset: -40% -20% auto;
+      height: 70%;
+      background: radial-gradient(circle, rgba(255,213,116,.2), transparent 58%);
+      pointer-events: none;
+    }
+
+    .win-card h2 {
+      position: relative;
+      margin: 0 0 8px;
+      color: #fff0cc;
+      font-family: Georgia, serif;
+      font-size: clamp(2.4rem, 7vw, 5.1rem);
+      line-height: .9;
+      text-shadow: 0 8px 20px rgba(0,0,0,.3);
+    }
+
+    .win-card p {
+      position: relative;
+      max-width: 760px;
+      margin: 12px auto;
+      color: #f5dfb9;
+      font-size: 1.05rem;
+      line-height: 1.55;
+    }
+
+    .reflection-box {
+      position: relative;
+      text-align: left;
+      margin: 24px auto 0;
+      max-width: 790px;
+      padding: 18px 20px;
+      border-radius: 22px;
+      background: rgba(0,0,0,.24);
+      border: 1px solid rgba(255,255,255,.11);
+      color: #ffe6b6;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 920px) {
+      .play-area { grid-template-columns: 1fr; }
+      .scene-panel { min-height: auto; }
+      .diorama { min-height: 330px; }
+      .choice-grid { grid-template-columns: 1fr; }
+      .modal-grid { grid-template-columns: 1fr; }
+      .topbar { grid-template-columns: 1fr; text-align: center; }
+      .tiny-logo, .top-actions { justify-content: center; }
+    }
+
+    @media (max-width: 640px) {
+      .title-actions { position: relative; margin: 12px auto 22px; bottom: auto; }
+      .title-art { height: 360px; margin-top: 0; }
+      .couch { width: 390px; }
+      .cushion.left { left: 92px; }
+      .cushion.right { right: 82px; }
+      .seed-vault { left: 18px; }
+      .botany-crate { left: auto; right: 120px; }
+      .subtitle-banner { padding-left: 32px; padding-right: 32px; min-width: auto; }
+      .subtitle-banner:before, .subtitle-banner:after { display: none; }
+      .lamp { transform: scale(.72); transform-origin: top left; }
+      .ladder, .shelf { opacity: .55; }
+      .game-screen { padding: 10px; }
+      .puzzle-panel { padding: 20px; }
+      .council-scores { grid-template-columns: 1fr; }
+      .note-line { margin-left: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <section id="titleScreen" class="screen title-screen active" aria-label="Title screen">
+    <div class="attic-beam main"></div>
+    <div class="attic-beam diagonal-a"></div>
+    <div class="attic-beam diagonal-b"></div>
+    <div class="lamp" aria-hidden="true"><div class="cord"></div><div class="shade"></div><div class="bulb"></div></div>
+    <div class="title-clouds" aria-hidden="true"></div>
+
+    <div class="title-wrap">
+      <h1 class="logo" aria-label="Escape Extinction">
+        <span class="line" id="logoLineOne"></span>
+        <span class="line" id="logoLineTwo"></span>
+      </h1>
+      <div class="subtitle-banner">BIO 227 Field Escape</div>
+      <p class="tagline">Five conservation rooms. One bird on the edge. Every choice leaves a footprint.</p>
+    </div>
+
+    <div class="title-art" aria-hidden="true">
+      <div class="back-window"></div>
+      <div class="ladder"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="seed-vault"></div>
+      <div class="cushion left"></div>
+      <div class="cushion right"></div>
+      <div class="couch"></div>
+      <div class="botany-crate"></div>
+      <div class="shelf"></div>
+      <div class="book"></div>
+      <div class="flask"></div>
+      <div class="plant"></div>
+      <div class="lizard"></div>
+    </div>
+
+    <div class="title-actions">
+      <button class="btn" id="startBtn">Start Game</button>
+      <button class="btn secondary" id="journalTitleBtn">Lecture Map</button>
+      <button class="btn ghost" id="aboutBtn">How to Submit</button>
+    </div>
+    <div class="grain"></div>
+  </section>
+
+  <section id="gameScreen" class="screen game-screen" aria-label="Game screen">
+    <div class="game-shell">
+      <header class="topbar">
+        <div class="tiny-logo"><span class="tiny-emblem">EE</span><span>Escape Extinction</span></div>
+        <div class="progress" id="progressBar" aria-label="Room progress"></div>
+        <div class="top-actions">
+          <button class="small-btn" id="journalBtn">Journal</button>
+          <button class="small-btn" id="restartBtn">Restart</button>
+        </div>
+      </header>
+
+      <main class="play-area">
+        <aside class="panel scene-panel">
+          <div class="diorama" id="diorama" aria-hidden="true">
+            <div class="backlight"></div>
+            <div class="floor"></div>
+            <div class="scene-object scene-table"></div>
+            <div class="scene-object floating-notes"></div>
+            <div class="scene-object scene-leaves"></div>
+            <div class="scene-object duskwalker"><span class="beak"></span><span class="leg one"></span><span class="leg two"></span></div>
+          </div>
+          <div class="stat-card">
+            <h3>Duskwalker Status</h3>
+            <div class="stats-grid" id="statsGrid"></div>
+          </div>
+        </aside>
+
+        <section class="panel puzzle-panel" id="puzzlePanel" aria-live="polite"></section>
+      </main>
+    </div>
+    <div class="grain"></div>
+  </section>
+
+  <section id="winScreen" class="win-screen" aria-label="Win screen">
+    <div class="win-card">
+      <h2>You Opened the Last Door</h2>
+      <p>The Duskwalker is not “saved forever.” That would be too neat. But the population has habitat, gene flow, safer release plans, local support, and a future strategy that can bend when the climate does.</p>
+      <p>This is the main point of the game: conservation works best as a connected system, not a single heroic fix.</p>
+      <div class="reflection-box">
+        <strong>Submission note you can adapt:</strong><br>
+        I built an escape-room game where each puzzle represents a conservation decision. The rooms move from ex situ rescue, to protected-area design, to conservation in working landscapes, to restoration ecology, and finally to future policy/funding decisions. The player has to combine biological accuracy with practical tradeoffs, which mirrors the way conservation biology depends on genetics, behavior, habitat, economics, enforcement, and public support.
+      </div>
+      <div class="puzzle-actions" style="justify-content:center; margin-top:24px;">
+        <button class="btn" id="playAgainBtn">Play Again</button>
+        <button class="btn secondary" id="journalWinBtn">Open Lecture Map</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal" id="modalContent"></div>
+  </div>
+
+  <script>
+    const rooms = [
+      {
+        id: "ark",
+        scene: "ark",
+        kicker: "Room 1 / Ex situ rescue",
+        title: "The Ark Room",
+        prompt: "A tiny captive flock is the only reason the Duskwalker still exists. Build a release plan that helps the birds survive outside the aviary, not just look healthy inside it.",
+        instruction: "Choose the five cards that belong in the release plan.",
+        max: 5,
+        tags: ["ex situ conservation", "captive breeding", "imprinting", "soft release", "genetic diversity"],
+        correctMessage: "The lock clicks. You kept the birds wild enough to be birds, healthy enough to release, and genetically mixed enough to matter.",
+        wrongMessage: "The aviary goes quiet. Something in this plan would make release risky. Look for choices that protect genetics, behavior, and disease safety.",
+        hint: "Captive breeding is not just making more animals. It has to protect genes, avoid bad behavior, avoid disease, and prepare animals for the wild.",
+        effect: { population: 12, genes: 14, support: 3 },
+        choices: [
+          { id: "studbook", title: "Pair birds with a studbook", sub: "Track ancestry and avoid inbreeding.", correct: true },
+          { id: "docile", title: "Breed the calmest birds only", sub: "Friendly birds are easier to handle.", correct: false },
+          { id: "puppets", title: "Use bird puppets and adult tutors", sub: "Reduce human imprinting and teach normal behavior.", correct: true },
+          { id: "health", title: "Screen every bird for disease", sub: "No sick animals go into the wild.", correct: true },
+          { id: "double", title: "Double-clutch the breeding pairs", sub: "Raise the first clutch safely and let parents lay again.", correct: true },
+          { id: "hard", title: "Hard release at sunrise tomorrow", sub: "Open the door and let nature sort it out.", correct: false },
+          { id: "soft", title: "Soft release with food and shelter", sub: "Support the birds until they can forage alone.", correct: true },
+          { id: "clone", title: "Skip the flock and clone one bird", sub: "It sounds flashy enough for donors.", correct: false }
+        ]
+      },
+      {
+        id: "reserve",
+        scene: "reserve",
+        kicker: "Room 2 / Protected areas",
+        title: "The Reserve Map",
+        prompt: "The next door is a drafting table covered in maps. You need a reserve plan that protects more than a pretty patch of green.",
+        instruction: "Choose the five design moves that make the reserve stronger.",
+        max: 5,
+        tags: ["protected areas", "reserve design", "SLOSS", "buffer zones", "corridors"],
+        correctMessage: "The map warms under your hand. The reserve now has a core, edges that make sense, and a way for animals to move.",
+        wrongMessage: "A red pencil circles the weak spots. A protected area can still fail if it is too small, isolated, edge-heavy, or missing the ecosystem it claims to protect.",
+        hint: "Think: whole ecosystem, bigger core, rounder shape, buffers, corridors, and climate room to move.",
+        effect: { habitat: 15, genes: 8, climate: 8 },
+        choices: [
+          { id: "watershed", title: "Protect the whole wetland watershed", sub: "The stream, marsh, upland edge, and nesting ground stay connected.", correct: true },
+          { id: "round", title: "Use a rounder core reserve", sub: "Less edge, more interior habitat.", correct: true },
+          { id: "strip", title: "Make a long skinny park along a road", sub: "It is cheap, but almost all edge.", correct: false },
+          { id: "buffer", title: "Add a working buffer zone", sub: "People can use land carefully around the core.", correct: true },
+          { id: "corridor", title: "Keep corridors and stepping stones", sub: "Movement keeps the population from becoming isolated.", correct: true },
+          { id: "singlepond", title: "Protect one isolated pond", sub: "Simple boundaries. No messy neighbors.", correct: false },
+          { id: "gradient", title: "Include an elevation gradient", sub: "The species has options as temperature and rainfall shift.", correct: true },
+          { id: "remove", title: "Clean out dead wood and fallen plants", sub: "The reserve will look tidier for visitors.", correct: false }
+        ]
+      },
+      {
+        id: "city",
+        scene: "city",
+        kicker: "Room 3 / Beyond park borders",
+        title: "The City Door",
+        prompt: "The Duskwalker migrates through farms, rooftops, drainage canals, and private land. The city is not outside nature. It is one of the rooms nature has to pass through.",
+        instruction: "Choose the five changes that make human landscapes safer for biodiversity.",
+        max: 5,
+        tags: ["reconciliation ecology", "green roofs", "shade agriculture", "payments for ecosystem services", "integrated management"],
+        correctMessage: "Streetlights dim. A rooftop blooms. The route is still a city, but it is no longer a dead end.",
+        wrongMessage: "The city door stays shut. A protected core cannot carry the whole job if the land around it is hostile.",
+        hint: "Look for changes that let people keep using the land while reducing the ecological damage.",
+        effect: { habitat: 10, support: 16, budget: 5 },
+        choices: [
+          { id: "greenroof", title: "Plant native green roofs", sub: "Small habitat patches also cool buildings and clean air.", correct: true },
+          { id: "shade", title: "Switch farms to shade agriculture", sub: "Crops grow with native vegetation instead of replacing it all.", correct: true },
+          { id: "pesticide", title: "Use pesticide-heavy monoculture", sub: "The field is efficient, but almost nothing else lives there.", correct: false },
+          { id: "pes", title: "Pay landowners for clean water and habitat", sub: "Ecosystem services become worth protecting.", correct: true },
+          { id: "fence", title: "Install migration-friendly fencing", sub: "Livestock stay in; wildlife can still move.", correct: true },
+          { id: "trash", title: "Feed wildlife near restaurants", sub: "People will see more animals up close.", correct: false },
+          { id: "pollution", title: "Regulate runoff into canals", sub: "Water quality matters far downstream.", correct: true },
+          { id: "ignore", title: "Ignore private land", sub: "Conservation is only for official parks.", correct: false }
+        ]
+      },
+      {
+        id: "restore",
+        scene: "restore",
+        kicker: "Room 4 / Restoration ecology",
+        title: "The Broken Wetland",
+        prompt: "This room used to be marsh. Then came the ditch, the fill dirt, the weeds, and years of pretending water would behave like a straight line.",
+        instruction: "Click the restoration steps in the order you would try them.",
+        type: "sequence",
+        tags: ["reference sites", "active restoration", "soil restoration", "biological restoration", "monitoring"],
+        correctMessage: "Water spreads through the channel again. The order mattered: fix the causes first, then rebuild the living pieces from the ground up.",
+        wrongMessage: "The mud swallows your boots. Restoration has order effects; top predators do not fix dead soil and bad hydrology.",
+        hint: "Start by stopping the damage and setting a reference goal. Then restore physical conditions, soil life, plants, animals, and monitoring.",
+        effect: { habitat: 18, population: 7, climate: 7 },
+        sequence: [
+          { id: "stressor", title: "Stop the cause of degradation", sub: "Block the pollution and end the damaging land use." },
+          { id: "reference", title: "Compare with a reference wetland", sub: "Set a measurable target instead of guessing what 'restored' means." },
+          { id: "hydrology", title: "Rebuild hydrology and physical structure", sub: "Let water move like a wetland again." },
+          { id: "soil", title: "Restore soil microbes, fungi, and invertebrates", sub: "Nutrient cycling and soil structure come before the showy stuff." },
+          { id: "earlyplants", title: "Plant early native species", sub: "Fast growers stabilize the site and start succession." },
+          { id: "lateplants", title: "Add shrubs, trees, and late successional plants", sub: "Complex habitat comes later." },
+          { id: "animals", title: "Reintroduce missing herbivores or carnivores", sub: "Higher trophic levels need the base rebuilt first." },
+          { id: "monitor", title: "Monitor and adapt", sub: "Restoration is managed after planting day." }
+        ]
+      },
+      {
+        id: "future",
+        scene: "future",
+        kicker: "Room 5 / The future council",
+        title: "The Last Door",
+        prompt: "A council table waits under a lamp. The budget is real. The climate is moving. People near the reserve are tired of rules that never pay rent.",
+        instruction: "Spend up to 12 coins. Open the door by scoring at least 6 in Habitat, People, and Accountability.",
+        type: "budget",
+        budget: 12,
+        tags: ["sustainable use", "local laws", "enforcement", "funding", "conservation incentives"],
+        correctMessage: "The council signs. Not everyone is thrilled, but enough people are invested that the plan can actually survive contact with the real world.",
+        wrongMessage: "The plan looks good in one column and weak in another. Conservation fails when ecology, people, or enforcement are treated like optional extras.",
+        hint: "A strong future plan mixes habitat protection, local incentives, real enforcement, education, and monitoring. A flashy shortcut will not carry the system.",
+        effect: { support: 12, budget: 8, climate: 10 },
+        choices: [
+          { id: "enforce", title: "Fund enforcement and meaningful fines", sub: "Rules only matter when breaking them costs more than following them.", cost: 3, habitat: 1, people: 0, account: 4 },
+          { id: "education", title: "Run local education and outreach", sub: "People protect what they understand and feel connected to.", cost: 2, habitat: 0, people: 3, account: 1 },
+          { id: "easement", title: "Buy conservation easements", sub: "Private land stays private, but key habitat cannot be paved over.", cost: 3, habitat: 4, people: 1, account: 1 },
+          { id: "pes", title: "Pay for ecosystem services", sub: "Clean water, carbon storage, and flood control become visible benefits.", cost: 3, habitat: 2, people: 4, account: 0 },
+          { id: "corridor", title: "Build climate corridors", sub: "Movement gives species a chance as conditions shift.", cost: 3, habitat: 4, people: 0, account: 1 },
+          { id: "research", title: "Keep research and monitoring funded", sub: "Adaptive management needs data, not just optimism.", cost: 2, habitat: 1, people: 0, account: 3 },
+          { id: "greenwash", title: "Accept vague green business pledges", sub: "The brochure is beautiful. The inspection plan is missing.", cost: 1, habitat: 0, people: 1, account: -2 },
+          { id: "deextinct", title: "Spend big on a de-extinction headline", sub: "Great press. Not enough habitat, behavior, or genetic diversity.", cost: 4, habitat: 0, people: 1, account: 0 }
+        ]
+      }
+    ];
+
+    const initialStats = {
+      population: 28,
+      habitat: 36,
+      genes: 33,
+      support: 42,
+      budget: 58,
+      climate: 24
+    };
+
+    const statLabels = {
+      population: "Population",
+      habitat: "Habitat",
+      genes: "Genes",
+      support: "Support",
+      budget: "Funding",
+      climate: "Climate room"
+    };
+
+    let currentRoom = 0;
+    let selected = new Set();
+    let sequencePicks = [];
+    let solvedRooms = new Set();
+    let stats = { ...initialStats };
+    let hintOpen = false;
+
+    const titleScreen = document.getElementById("titleScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const winScreen = document.getElementById("winScreen");
+    const puzzlePanel = document.getElementById("puzzlePanel");
+    const diorama = document.getElementById("diorama");
+    const progressBar = document.getElementById("progressBar");
+    const statsGrid = document.getElementById("statsGrid");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalContent = document.getElementById("modalContent");
+
+    function buildLogoLine(text, targetId) {
+      const target = document.getElementById(targetId);
+      const rotations = [-7, 4, -2, 6, -5, 3, 5, -4, 2, -6, 4, -3];
+      target.innerHTML = text.split("").map((ch, i) => {
+        const rise = (i % 3 === 0) ? "-3px" : (i % 3 === 1 ? "2px" : "0px");
+        const rot = rotations[i % rotations.length];
+        return `<span class="letter" style="--rot:${rot}deg;--rise:${rise}">${ch === " " ? "&nbsp;" : ch}</span>`;
+      }).join("");
+    }
+
+    buildLogoLine("Escape", "logoLineOne");
+    buildLogoLine("Extinction", "logoLineTwo");
+
+    function clampStat(value) {
+      return Math.max(0, Math.min(100, value));
+    }
+
+    function updateStats(effect = {}) {
+      Object.keys(effect).forEach(key => {
+        stats[key] = clampStat((stats[key] || 0) + effect[key]);
+      });
+      renderStats();
+    }
+
+    function renderStats() {
+      statsGrid.innerHTML = Object.keys(statLabels).map(key => {
+        const value = clampStat(stats[key]);
+        return `
+          <div class="stat-row">
+            <span>${statLabels[key]}</span>
+            <div class="bar" aria-hidden="true"><span style="--value:${value}%"></span></div>
+            <strong>${value}</strong>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderProgress() {
+      progressBar.innerHTML = rooms.map((room, i) => {
+        let cls = "stamp";
+        if (solvedRooms.has(i)) cls += " done";
+        else if (i === currentRoom) cls += " current";
+        return `<span class="${cls}" title="${room.title}"></span>`;
+      }).join("");
+    }
+
+    function sceneMarkup(scene) {
+      const base = `
+        <div class="backlight"></div>
+        <div class="floor"></div>
+      `;
+      if (scene === "reserve") {
+        return base + `
+          <div class="map-piece a"></div><div class="map-piece b"></div><div class="map-piece c"></div><div class="corridor-line"></div>
+          <div class="scene-object floating-notes"></div>
+          <div class="scene-object duskwalker" style="left:33%; bottom:24%; transform:scale(.78) rotate(-3deg)"><span class="beak"></span><span class="leg one"></span><span class="leg two"></span></div>
+        `;
+      }
+      if (scene === "city") {
+        return base + `
+          <div class="city-block one"></div><div class="city-block two"></div><div class="city-block three"></div><div class="roof-garden"></div>
+          <div class="scene-object scene-leaves" style="right:29%; bottom:19%;"></div>
+          <div class="scene-object duskwalker" style="left:61%; bottom:20%; transform:scale(.72) rotate(5deg)"><span class="beak"></span><span class="leg one"></span><span class="leg two"></span></div>
+        `;
+      }
+      if (scene === "restore") {
+        return base + `
+          <div class="stream"></div><div class="sprouts"></div>
+          <div class="scene-object floating-notes" style="top:11%; left:58%; transform:rotate(12deg)"></div>
+          <div class="scene-object duskwalker" style="left:30%; bottom:23%; transform:scale(.8) rotate(-5deg)"><span class="beak"></span><span class="leg one"></span><span class="leg two"></span></div>
+        `;
+      }
+      if (scene === "future") {
+        return base + `
+          <div class="council-table"></div>
+          <div class="scene-object floating-notes" style="left:15%; top:18%;"></div>
+          <div class="scene-object floating-notes" style="left:auto; right:13%; top:18%; transform:rotate(12deg)"></div>
+          <div class="scene-object duskwalker" style="left:50%; bottom:35%; transform:scale(.7) translateX(-50%) rotate(2deg)"><span class="beak"></span><span class="leg one"></span><span class="leg two"></span></div>
+        `;
+      }
+      return base + `
+        <div class="scene-object scene-table"></div>
+        <div class="scene-object floating-notes"></div>
+        <div class="scene-object scene-leaves"></div>
+        <div class="scene-object duskwalker"><span class="beak"></span><span class="leg one"></span><span class="leg two"></span></div>
+      `;
+    }
+
+    function renderRoom() {
+      const room = rooms[currentRoom];
+      selected = new Set();
+      sequencePicks = [];
+      hintOpen = false;
+      diorama.className = `diorama ${room.scene}`;
+      diorama.innerHTML = sceneMarkup(room.scene);
+      renderProgress();
+      renderStats();
+      if (room.type === "sequence") renderSequenceRoom(room);
+      else if (room.type === "budget") renderBudgetRoom(room);
+      else renderChoiceRoom(room);
+    }
+
+    function baseRoomHeader(room) {
+      return `
+        <p class="room-kicker">${room.kicker}</p>
+        <h2 class="room-title">${room.title}</h2>
+        <p class="room-copy">${room.prompt}</p>
+        <p class="room-copy"><strong>${room.instruction}</strong></p>
+        <div class="badge-row">${room.tags.map(tag => `<span class="topic-badge">${tag}</span>`).join("")}</div>
+      `;
+    }
+
+    function renderChoiceRoom(room, feedback = "") {
+      puzzlePanel.innerHTML = `
+        ${baseRoomHeader(room)}
+        <div class="choice-grid">
+          ${room.choices.map(choice => `
+            <button class="choice ${selected.has(choice.id) ? "selected" : ""}" data-choice="${choice.id}">
+              <span class="choice-title">${choice.title}</span>
+              <span class="choice-sub">${choice.sub}</span>
+            </button>
+          `).join("")}
+        </div>
+        <div class="feedback ${feedback ? "" : ""}" id="feedbackBox">${feedback || `Selected ${selected.size} of ${room.max}.`}</div>
+        <div class="puzzle-actions">
+          <button class="btn" id="checkBtn">Check Lock</button>
+          <button class="btn secondary" id="hintBtn">Hint</button>
+          <button class="btn ghost" id="clearBtn">Clear</button>
+          <span class="note-line">Room ${currentRoom + 1} of ${rooms.length}</span>
+        </div>
+      `;
+
+      puzzlePanel.querySelectorAll(".choice").forEach(button => {
+        button.addEventListener("click", () => {
+          const id = button.dataset.choice;
+          if (selected.has(id)) selected.delete(id);
+          else {
+            if (selected.size >= room.max) {
+              showFeedback(`You only have room for ${room.max} choices. Drop one before adding another.`, "bad");
+              return;
+            }
+            selected.add(id);
+          }
+          renderChoiceRoom(room);
+        });
+      });
+
+      document.getElementById("checkBtn").addEventListener("click", () => checkChoiceRoom(room));
+      document.getElementById("hintBtn").addEventListener("click", () => showFeedback(room.hint, ""));
+      document.getElementById("clearBtn").addEventListener("click", () => { selected = new Set(); renderChoiceRoom(room); });
+    }
+
+    function checkChoiceRoom(room) {
+      const correctIds = new Set(room.choices.filter(c => c.correct).map(c => c.id));
+      const allCorrect = selected.size === correctIds.size && [...selected].every(id => correctIds.has(id));
+      if (allCorrect) solveRoom(room.correctMessage, room.effect);
+      else showFeedback(room.wrongMessage, "bad");
+    }
+
+    function renderSequenceRoom(room, feedback = "") {
+      const remaining = room.sequence.filter(step => !sequencePicks.includes(step.id));
+      puzzlePanel.innerHTML = `
+        ${baseRoomHeader(room)}
+        <div class="sequence-list">
+          ${remaining.map(step => `
+            <button class="sequence-choice" data-step="${step.id}">
+              <span class="seq-num">${sequencePicks.length + 1}</span>
+              <span><strong>${step.title}</strong><br><small>${step.sub}</small></span>
+            </button>
+          `).join("")}
+        </div>
+        <div class="feedback" id="feedbackBox">${feedback || sequenceStatus(room)}</div>
+        <div class="puzzle-actions">
+          <button class="btn" id="hintBtn">Hint</button>
+          <button class="btn ghost" id="clearBtn">Start Over</button>
+          <span class="note-line">Room ${currentRoom + 1} of ${rooms.length}</span>
+        </div>
+      `;
+
+      puzzlePanel.querySelectorAll(".sequence-choice").forEach(button => {
+        button.addEventListener("click", () => {
+          const id = button.dataset.step;
+          const expectedId = room.sequence[sequencePicks.length].id;
+          if (id === expectedId) {
+            sequencePicks.push(id);
+            if (sequencePicks.length === room.sequence.length) solveRoom(room.correctMessage, room.effect);
+            else renderSequenceRoom(room, sequenceStatus(room));
+          } else {
+            showFeedback(room.wrongMessage, "bad");
+          }
+        });
+      });
+      document.getElementById("hintBtn").addEventListener("click", () => showFeedback(room.hint, ""));
+      document.getElementById("clearBtn").addEventListener("click", () => { sequencePicks = []; renderSequenceRoom(room); });
+    }
+
+    function sequenceStatus(room) {
+      if (!sequencePicks.length) return "No steps chosen yet. Start with the cause of degradation, not the charismatic animal.";
+      const names = sequencePicks.map(id => room.sequence.find(s => s.id === id).title).join(" → ");
+      return `Current order: ${names}`;
+    }
+
+    function renderBudgetRoom(room, feedback = "") {
+      const totals = getBudgetTotals(room);
+      puzzlePanel.innerHTML = `
+        ${baseRoomHeader(room)}
+        <div class="budget-meter">
+          <span>Coins spent</span>
+          <div class="budget-track"><div class="budget-fill" style="width:${Math.min(100, totals.cost / room.budget * 100)}%"></div></div>
+          <span>${totals.cost}/${room.budget}</span>
+        </div>
+        <div class="council-scores">
+          <div class="score-pill">Habitat ${totals.habitat}/6</div>
+          <div class="score-pill">People ${totals.people}/6</div>
+          <div class="score-pill">Accountability ${totals.account}/6</div>
+        </div>
+        <div class="choice-grid">
+          ${room.choices.map(choice => `
+            <button class="choice ${selected.has(choice.id) ? "selected" : ""}" data-choice="${choice.id}">
+              <span class="choice-title">${choice.title} <small>(${choice.cost})</small></span>
+              <span class="choice-sub">${choice.sub}</span>
+            </button>
+          `).join("")}
+        </div>
+        <div class="feedback" id="feedbackBox">${feedback || "Build a plan that works ecologically, socially, and legally."}</div>
+        <div class="puzzle-actions">
+          <button class="btn" id="checkBtn">Present Plan</button>
+          <button class="btn secondary" id="hintBtn">Hint</button>
+          <button class="btn ghost" id="clearBtn">Clear</button>
+          <span class="note-line">Room ${currentRoom + 1} of ${rooms.length}</span>
+        </div>
+      `;
+
+      puzzlePanel.querySelectorAll(".choice").forEach(button => {
+        button.addEventListener("click", () => {
+          const id = button.dataset.choice;
+          const choice = room.choices.find(c => c.id === id);
+          const currentCost = getBudgetTotals(room).cost;
+          if (selected.has(id)) selected.delete(id);
+          else if (currentCost + choice.cost <= room.budget) selected.add(id);
+          else {
+            showFeedback("That would break the budget. Real plans have limits, which is why priorities matter.", "bad");
+            return;
+          }
+          renderBudgetRoom(room);
+        });
+      });
+      document.getElementById("checkBtn").addEventListener("click", () => checkBudgetRoom(room));
+      document.getElementById("hintBtn").addEventListener("click", () => showFeedback(room.hint, ""));
+      document.getElementById("clearBtn").addEventListener("click", () => { selected = new Set(); renderBudgetRoom(room); });
+    }
+
+    function getBudgetTotals(room) {
+      const totals = { cost: 0, habitat: 0, people: 0, account: 0 };
+      room.choices.forEach(choice => {
+        if (selected.has(choice.id)) {
+          totals.cost += choice.cost;
+          totals.habitat += choice.habitat;
+          totals.people += choice.people;
+          totals.account += choice.account;
+        }
+      });
+      return totals;
+    }
+
+    function checkBudgetRoom(room) {
+      const totals = getBudgetTotals(room);
+      if (totals.cost <= room.budget && totals.habitat >= 6 && totals.people >= 6 && totals.account >= 6) {
+        solveRoom(room.correctMessage, room.effect);
+      } else {
+        showFeedback(room.wrongMessage, "bad");
+      }
+    }
+
+    function showFeedback(message, tone) {
+      const box = document.getElementById("feedbackBox");
+      if (!box) return;
+      box.textContent = message;
+      box.className = `feedback ${tone || ""}`;
+    }
+
+    function solveRoom(message, effect) {
+      solvedRooms.add(currentRoom);
+      updateStats(effect);
+      renderProgress();
+      const box = document.getElementById("feedbackBox");
+      if (box) {
+        box.textContent = message;
+        box.className = "feedback good";
+      }
+      const actions = puzzlePanel.querySelector(".puzzle-actions");
+      if (actions) {
+        actions.innerHTML = `
+          <button class="btn" id="nextBtn">${currentRoom === rooms.length - 1 ? "Open Final Door" : "Next Room"}</button>
+          <button class="btn secondary" id="journalAfterBtn">Lecture Map</button>
+        `;
+        document.getElementById("nextBtn").addEventListener("click", nextRoom);
+        document.getElementById("journalAfterBtn").addEventListener("click", openJournal);
+      }
+      puzzlePanel.querySelectorAll("button.choice, button.sequence-choice").forEach(btn => btn.disabled = true);
+    }
+
+    function nextRoom() {
+      if (currentRoom >= rooms.length - 1) {
+        gameScreen.classList.remove("active");
+        winScreen.classList.add("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      currentRoom += 1;
+      renderRoom();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function startGame() {
+      currentRoom = 0;
+      selected = new Set();
+      sequencePicks = [];
+      solvedRooms = new Set();
+      stats = { ...initialStats };
+      titleScreen.classList.remove("active");
+      winScreen.classList.remove("active");
+      gameScreen.classList.add("active");
+      renderRoom();
+    }
+
+    function restartGame() {
+      const ok = confirm("Restart the escape room from the beginning?");
+      if (ok) startGame();
+    }
+
+    function openModal(html) {
+      modalContent.innerHTML = html;
+      modalBackdrop.classList.add("open");
+      const close = modalContent.querySelector("[data-close]");
+      if (close) close.focus();
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("open");
+    }
+
+    function openJournal() {
+      openModal(`
+        <h2 id="modalTitle">Lecture Map</h2>
+        <p>This is the built-in guide for the project. It shows what each room is trying to prove, without turning the game into a slideshow.</p>
+        <div class="modal-grid">
+          <div class="journal-card"><h3>Room 1: Ex situ rescue</h3><p>Captive breeding can buy time, but release plans need genetic diversity, disease screening, normal behavior, and a soft landing back into wild habitat.</p></div>
+          <div class="journal-card"><h3>Room 2: Protected areas</h3><p>The reserve puzzle rewards whole ecosystems, larger/rounder cores, buffer zones, corridors, stepping stones, and climate gradients.</p></div>
+          <div class="journal-card"><h3>Room 3: Outside the park</h3><p>Green roofs, shade agriculture, private-land incentives, pollution control, and migration-friendly design show reconciliation ecology in practice.</p></div>
+          <div class="journal-card"><h3>Room 4: Restoration ecology</h3><p>The wetland has to be rebuilt in order: remove stressors, set a reference, fix hydrology, restore soil life, plant natives, then reintroduce higher trophic levels.</p></div>
+          <div class="journal-card"><h3>Room 5: Future synthesis</h3><p>The final puzzle asks for a realistic mix: habitat protection, funding, local buy-in, enforcement, education, monitoring, and climate adaptation.</p></div>
+          <div class="journal-card"><h3>Overall argument</h3><p>The game is designed around one idea: conservation is a network of decisions. A single tool can help, but it rarely solves the whole problem alone.</p></div>
+        </div>
+        <div class="close-row"><button class="btn" data-close>Close</button></div>
+      `);
+      modalContent.querySelector("[data-close]").addEventListener("click", closeModal);
+    }
+
+    function openAbout() {
+      openModal(`
+        <h2 id="modalTitle">How to Submit This</h2>
+        <p>Submit the HTML file or the zipped folder. It runs in a browser, so no installation is needed.</p>
+        <p>A strong note to include with the submission:</p>
+        <div class="reflection-box" style="margin-top:12px;">
+          I made a playable conservation escape room instead of a standard presentation. Each lock is based on a real conservation decision from BIO 227: captive breeding and release, reserve design, conservation outside protected areas, restoration order effects, and future policy tradeoffs. The game is meant to show that conservation biology is not one magic fix; it is a set of linked decisions involving species biology, habitat, people, money, and enforcement.
+        </div>
+        <p>The title screen and rooms are hand-built with HTML, CSS, and JavaScript. No external libraries are required.</p>
+        <div class="close-row"><button class="btn" data-close>Close</button></div>
+      `);
+      modalContent.querySelector("[data-close]").addEventListener("click", closeModal);
+    }
+
+    document.getElementById("startBtn").addEventListener("click", startGame);
+    document.getElementById("restartBtn").addEventListener("click", restartGame);
+    document.getElementById("journalBtn").addEventListener("click", openJournal);
+    document.getElementById("journalTitleBtn").addEventListener("click", openJournal);
+    document.getElementById("journalWinBtn").addEventListener("click", openJournal);
+    document.getElementById("aboutBtn").addEventListener("click", openAbout);
+    document.getElementById("playAgainBtn").addEventListener("click", startGame);
+    modalBackdrop.addEventListener("click", event => {
+      if (event.target === modalBackdrop) closeModal();
+    });
+    window.addEventListener("keydown", event => {
+      if (event.key === "Escape" && modalBackdrop.classList.contains("open")) closeModal();
+    });
+
+    renderStats();
+  document.addEventListener("keydown", function (e) {
+    if (
+      e.ctrlKey &&
+      (
+        e.keyCode === 67 ||  // C
+        e.keyCode === 86 ||  // V
+        e.keyCode === 85 ||  // U
+        e.keyCode === 117    // F6
+      )
+    ) {
+      e.preventDefault();
+      alert("This function does not work.");
+      return false;
+    }
+  });
+  </script>
+</body>
+</html>
